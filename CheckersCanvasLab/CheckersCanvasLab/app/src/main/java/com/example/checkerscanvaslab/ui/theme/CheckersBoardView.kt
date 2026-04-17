@@ -11,6 +11,7 @@ import kotlin.math.min
 
 class CheckersBoardView(context: Context) : View(context) {
 
+
     private val lightPaint = Paint().apply {
         color = Color.parseColor("#F0D9B5")
     }
@@ -20,17 +21,17 @@ class CheckersBoardView(context: Context) : View(context) {
     }
 
     private val redPiecePaint = Paint().apply {
-        color = Color.RED
+        color = Color.parseColor("#FF0000")
         isAntiAlias = true
     }
 
     private val blackPiecePaint = Paint().apply {
-        color = Color.BLACK
+        color = Color.parseColor("#000000")
         isAntiAlias = true
     }
 
     private val highlightPaint = Paint().apply {
-        color = Color.YELLOW
+        color = Color.parseColor("#FFFF00")
         style = Paint.Style.STROKE
         strokeWidth = 8f
         isAntiAlias = true
@@ -51,6 +52,8 @@ class CheckersBoardView(context: Context) : View(context) {
 
     init {
         setBackgroundColor(Color.parseColor("#212121")) // Dark grey background
+        //setThemeDefault()
+        setThemeAccessible()
         setupPieces()
     }
 
@@ -205,4 +208,21 @@ class CheckersBoardView(context: Context) : View(context) {
         board[toRow][toCol] = board[fromRow][fromCol]
         board[fromRow][fromCol] = 0
     }
+
+    fun setThemeDefault() {
+        lightPaint.color = Color.parseColor("#F0D9B5")
+        darkPaint.color = Color.parseColor("#B58863")
+        redPiecePaint.color = Color.parseColor("#FF0000")
+        blackPiecePaint.color = Color.parseColor("#000000")
+        highlightPaint.color = Color.parseColor("#FFFF00")
+    }
+
+    fun setThemeAccessible() {
+        lightPaint.color = Color.parseColor("#EDC687")
+        darkPaint.color = Color.parseColor("#AD8361")
+        redPiecePaint.color = Color.parseColor("#FFFFFF")
+        blackPiecePaint.color = Color.parseColor("#000000")
+        highlightPaint.color = Color.parseColor("#F1F11E")
+    }
+
 }
