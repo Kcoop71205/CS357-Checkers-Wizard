@@ -1,20 +1,22 @@
 package com.example.checkerscanvaslab
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -23,7 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun HomeScreen(onPlayClick: () -> Unit) {
+fun HomeScreen(
+    onPlayClick: () -> Unit,
+    onTutorialClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
 
     Image(
         painter = painterResource(id = R.drawable.scrollbackground),
@@ -62,50 +68,42 @@ fun HomeScreen(onPlayClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        val buttonModifier = Modifier
-            .width(200.dp)
-            .height(60.dp)
-        
-        val customButtonColor = Color(0xFF23479F)
+        // Custom Play Button
+        ParchmentButton(text = "Play", onClick = onPlayClick)
 
-        Button(
-            onClick = { onPlayClick() },
-            shape = RectangleShape,
-            modifier = buttonModifier,
-            colors = ButtonDefaults.buttonColors(containerColor = customButtonColor)
-        ) {
-            Text(
-                text = "Play",
-                fontSize = 24.sp
-            )
-        }
+        // Custom Tutorial Button
+        ParchmentButton(text = "Tutorial", onClick = onTutorialClick, modifier = Modifier.offset(y = (-20).dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Custom Settings Button
+        ParchmentButton(text = "Settings", onClick = onSettingsClick, modifier = Modifier.offset(y = (-40).dp))
+    }
+}
 
-        Button(
-            onClick = { onPlayClick() },
-            shape = RectangleShape,
-            modifier = buttonModifier,
-            colors = ButtonDefaults.buttonColors(containerColor = customButtonColor)
-        ) {
-            Text(
-                text = "Tutorial",
-                fontSize = 24.sp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = { onPlayClick() },
-            shape = RectangleShape,
-            modifier = buttonModifier,
-            colors = ButtonDefaults.buttonColors(containerColor = customButtonColor)
-        ) {
-            Text(
-                text = "Settings",
-                fontSize = 24.sp
-            )
-        }
+@Composable
+fun ParchmentButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .width(250.dp)
+            .height(130.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() }
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.parchmentscroll),
+            contentDescription = "$text button background",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillBounds
+        )
+        Text(
+            text = text,
+            fontSize = 50.sp,
+            fontFamily = FontFamily.Cursive,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
     }
 }

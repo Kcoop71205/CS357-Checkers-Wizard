@@ -1,3 +1,5 @@
+// Aiden what the fuck
+
 package com.example.checkerscanvaslab.ui.theme
 
 import android.content.Context
@@ -14,9 +16,13 @@ import android.media.MediaPlayer
 import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.View
+import androidx.compose.material3.darkColorScheme
 import androidx.core.graphics.toColorInt
 import androidx.core.graphics.withTranslation
+import com.example.checkerscanvaslab.GameSettings
 import com.example.checkerscanvaslab.R
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlin.math.abs
 import kotlin.math.min
 import java.util.Random
@@ -114,6 +120,11 @@ class CheckersBoardView(context: Context) : View(context) {
         isAntiAlias = true
     }
 
+    // used to store the name of the theme in use currently
+    //private var themeName = "classic"
+    private var themeName = ""
+
+
     private val boardSize = 8
     private var cellSize = 0f
     private var offsetX = 0f
@@ -152,8 +163,12 @@ class CheckersBoardView(context: Context) : View(context) {
     
     // Callback for home button
     var onHomeClick: (() -> Unit)? = null
+    var onVictory: (() -> Unit)? = null
+    var onDefeat: (() -> Unit)? = null
+
 
     init {
+
         setupPieces()
         
         try {
@@ -162,6 +177,37 @@ class CheckersBoardView(context: Context) : View(context) {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    // Nate created function for setting the board colors.
+    // Different strings change the pallets to different colors.
+    // Called in onDraw
+    public fun setColors(text: String) {
+        themeName = text
+        if (themeName == "classic") {
+            lightPaint.color = "#DEC496".toColorInt()
+            darkPaint.color = "#4B3120".toColorInt()
+            redPiecePaint.color = Color.RED
+            blackPiecePaint.color = Color.BLACK
+            highlightPaint.color = Color.YELLOW
+        } else if(themeName == "original") {
+            lightPaint.color = "#F0D9B5".toColorInt()
+            darkPaint.color = "#B58863".toColorInt()
+            redPiecePaint.color = Color.RED
+            blackPiecePaint.color = Color.BLACK
+            highlightPaint.color = Color.YELLOW
+        } else if (themeName == "contrast") {
+            lightPaint.color = "#EDC687".toColorInt()
+            darkPaint.color = "#AD8361".toColorInt()
+            redPiecePaint.color = Color.WHITE
+            blackPiecePaint.color = Color.BLACK
+            highlightPaint.color = "#F1F11E".toColorInt()
+        }
+
+    }
+
+    fun applyPaletteFromSettings(value: String) {
+        setColors(value)
     }
 
     private fun setupPieces() {
@@ -193,7 +239,13 @@ class CheckersBoardView(context: Context) : View(context) {
         invalidate()
     }
 
+
     override fun onDraw(canvas: Canvas) {
+        //setColors(themeName)
+        if (themeName != GameSettings.palette.value) {
+            setColors(GameSettings.palette.value)
+        }
+
         super.onDraw(canvas)
 
         // Draw background texture
@@ -473,6 +525,11 @@ class CheckersBoardView(context: Context) : View(context) {
                 selectedRow = row
                 selectedCol = col
             } else cancelSelection()
+            if (blackCapturedCount >= 12) {
+                onVictory?.invoke()
+            } else if (redCapturedCount >= 12) {
+                onDefeat?.invoke()
+            }
         }
     }
 
@@ -514,3 +571,4 @@ class CheckersBoardView(context: Context) : View(context) {
     private fun playKingSound() { MediaPlayer.create(context, R.raw.lightning)?.apply { setOnCompletionListener { it.release() }; start() } }
     override fun performClick() : Boolean { return super.performClick() }
 }
+
