@@ -10,39 +10,36 @@ import androidx.core.graphics.toColorInt
 import androidx.core.graphics.withTranslation
 import com.example.checkerscanvaslab.*
 import java.util.Random
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
 /**
- * CheckersBoardView is a custom Android View that handles the rendering of the checkers board,
- * pieces, and UI elements. It delegates all game logic (moves, captures, win conditions) 
- * to the [CheckersGame] class to maintain a clean separation of concerns.
+ * CheckersBoardView handles the rendering of the board and pieces.
+ * It now supports accessibility themes including alternate color palettes 
+ * and distinct shapes (Stars vs Circles).
  */
 @Suppress("DEPRECATION")
 class CheckersBoardView(context: Context) : View(context) {
 
-    // --- Game Logic Engine ---
     private val game = CheckersGame()
     private val boardSize = 8
 
-    // --- Layout and UI State ---
     private var cellSize = 0f
     private var offsetX = 0f
     private var offsetY = 0f
     private var themeName = ""
 
-    // --- Bitmaps (Images) ---
     private val kingBlackBitmap: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.checkerskingblack)
     private val kingRedBitmap: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.checkerskingred)
     private val scrollBitmap: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.parchmentscroll)
     private val backgroundBitmap: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.scrollbackgroundgame)
 
-    // --- Animation State ---
     private var lightningMovie: Movie? = null
     private var lightningStartTime: Long = -1
     private var lightningRow = -1
     private var lightningCol = -1
 
-    // --- Pre-allocated Objects for Rendering Performance ---
     private val topScrollRect = RectF()
     private val bottomScrollRect = RectF()
     private val pieceRect = RectF()
@@ -50,8 +47,8 @@ class CheckersBoardView(context: Context) : View(context) {
     private val viewRect = RectF()
     private val homeButtonRect = RectF()
     private val resetButtonRect = RectF()
+    private val starPath = Path()
 
-    // --- Paints (Styling) ---
     private val lightPaint = Paint().apply { style = Paint.Style.FILL }
     private val darkPaint = Paint().apply { style = Paint.Style.FILL }
     private val boardBorderPaint = Paint().apply {
@@ -71,13 +68,11 @@ class CheckersBoardView(context: Context) : View(context) {
     private val redTurnPaint = Paint().apply { color = Color.RED; textSize = 65f; isAntiAlias = true; textAlign = Paint.Align.CENTER; typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD_ITALIC) }
     private val highlightPaint = Paint().apply { color = Color.YELLOW; style = Paint.Style.STROKE; strokeWidth = 8f; isAntiAlias = true }
 
-    // --- Callbacks for Navigation ---
     var onHomeClick: (() -> Unit)? = null
     var onVictory: (() -> Unit)? = null
     var onDefeat: (() -> Unit)? = null
 
     init {
-        // Load the lightning animation for king promotions
         try {
             val inputStream = resources.openRawResource(R.raw.lightninganimation)
             lightningMovie = Movie.decodeStream(inputStream)
@@ -87,11 +82,18 @@ class CheckersBoardView(context: Context) : View(context) {
     }
 
     /**
-     * Changes the board's color palette based on a theme name.
+     * Updates colors and rendering modes based on the selected theme.
      */
     fun setColors(text: String) {
         themeName = text
         when (text) {
+            "original", "alternate_shapes" -> {
+                lightPaint.color = "#F0D9B5".toColorInt()
+                darkPaint.color = "#B58863".toColorInt()
+                redPiecePaint.color = Color.RED
+                blackPiecePaint.color = Color.BLACK
+                highlightPaint.color = Color.YELLOW
+            }
             "classic" -> {
                 lightPaint.color = "#DEC496".toColorInt()
                 darkPaint.color = "#4B3120".toColorInt()
@@ -99,33 +101,22 @@ class CheckersBoardView(context: Context) : View(context) {
                 blackPiecePaint.color = Color.BLACK
                 highlightPaint.color = Color.YELLOW
             }
-            "original" -> {
-                lightPaint.color = "#F0D9B5".toColorInt()
-                darkPaint.color = "#B58863".toColorInt()
-                redPiecePaint.color = Color.RED
-                blackPiecePaint.color = Color.BLACK
-                highlightPaint.color = Color.YELLOW
-            }
-            "contrast" -> {
-                lightPaint.color = "#EDC687".toColorInt()
-                darkPaint.color = "#AD8361".toColorInt()
-                redPiecePaint.color = Color.WHITE
-                blackPiecePaint.color = Color.BLACK
-                highlightPaint.color = "#F1F11E".toColorInt()
+            "alternate_colors" -> {
+                lightPaint.color = "#EAD8C0".toColorInt() // Lighter beige
+                darkPaint.color = "#6D5D6E".toColorInt() // Muted purple-grey
+                redPiecePaint.color = "#FF8C00".toColorInt() // Bright Orange
+                blackPiecePaint.color = "#0000FF".toColorInt() // Pure Blue
+                highlightPaint.color = Color.CYAN
             }
         }
-        invalidate() // Request a redraw with the new colors
+        invalidate()
     }
 
-    /**
-     * Alias for setColors used by the settings system.
-     */
     fun applyPaletteFromSettings(value: String) {
         setColors(value)
     }
 
     override fun onDraw(canvas: Canvas) {
-        // Ensure theme is up to date with global settings
         if (themeName != GameSettings.palette.value) {
             setColors(GameSettings.palette.value)
         }
@@ -135,7 +126,6 @@ class CheckersBoardView(context: Context) : View(context) {
         calculateLayout()
         drawUIElements(canvas)
 
-        // Draw the board and its contents with centering offset
         canvas.withTranslation(offsetX, offsetY) {
             drawBoard(this)
             drawPieces(this)
@@ -149,9 +139,6 @@ class CheckersBoardView(context: Context) : View(context) {
         canvas.drawBitmap(backgroundBitmap, null, viewRect, null)
     }
 
-    /**
-     * Calculates the size of cells and the offset to center the board.
-     */
     private fun calculateLayout() {
         val boardDim = min(width.toFloat(), height * 0.72f)
         cellSize = boardDim / boardSize.toFloat()
@@ -159,30 +146,23 @@ class CheckersBoardView(context: Context) : View(context) {
         offsetY = (height - boardDim) / 2f
     }
 
-    /**
-     * Draws the score scrolls, turn indicators, and control buttons.
-     */
     private fun drawUIElements(canvas: Canvas) {
         val boardDim = cellSize * boardSize
         val scrollHeight = min(offsetY * 0.8f, 280f)
 
-        // Top Scroll: Displays Red player score
         topScrollRect.set(width * 0.05f, offsetY - scrollHeight + 15f, width * 0.95f, offsetY + 15f)
         canvas.drawBitmap(scrollBitmap, null, topScrollRect, null)
         drawTextWithRedHighlight(canvas, "Player Two Points(red): ${game.redCapturedCount}", 
             width / 2f, topScrollRect.centerY() + 15f, scorePaint, redScorePaint)
 
-        // Bottom Scroll: Displays Black player score
         bottomScrollRect.set(width * 0.05f, offsetY + boardDim - 15f, width * 0.95f, offsetY + boardDim + scrollHeight - 15f)
         canvas.drawBitmap(scrollBitmap, null, bottomScrollRect, null)
         drawTextWithRedHighlight(canvas, "Player One Points(black): ${game.blackCapturedCount}", 
             width / 2f, bottomScrollRect.centerY() + 15f, scorePaint, redScorePaint)
 
-        // Turn indicator
         val turnText = if (game.isRedTurn) "Player One's Turn (Red)" else "Player Two's Turn (Black)"
         drawTextWithRedHighlight(canvas, turnText, width / 2f, 170f, turnPaint, redTurnPaint)
 
-        // HOME and RESET buttons
         val buttonWidth = 220f
         val buttonHeight = 100f
         val margin = 40f
@@ -196,9 +176,6 @@ class CheckersBoardView(context: Context) : View(context) {
         canvas.drawText("RESET", resetButtonRect.centerX(), resetButtonRect.centerY() + 15f, scorePaint)
     }
 
-    /**
-     * Utility to draw text where the substring "red" is highlighted in red color.
-     */
     private fun drawTextWithRedHighlight(canvas: Canvas, text: String, x: Float, y: Float, basePaint: Paint, redPaint: Paint) {
         val redIndex = text.indexOf("red", ignoreCase = true)
         if (redIndex != -1) {
@@ -225,37 +202,26 @@ class CheckersBoardView(context: Context) : View(context) {
         }
     }
 
-    /**
-     * Renders the 8x8 checkerboard grid with procedural wood grain.
-     */
     private fun drawBoard(canvas: Canvas) {
         for (row in 0 until boardSize) {
             for (col in 0 until boardSize) {
                 val left = col * cellSize
                 val top = row * cellSize
-                val right = left + cellSize
-                val bottom = top + cellSize
-                
                 val isDark = (row + col) % 2 != 0
                 val paint = if (isDark) darkPaint else lightPaint
-                canvas.drawRect(left, top, right, bottom, paint)
-                
-                drawWoodGrain(canvas, left, top, right, bottom, isDark)
-                canvas.drawRect(left, top, right, bottom, boardBorderPaint) // Square borders
+                canvas.drawRect(left, top, left + cellSize, top + cellSize, paint)
+                drawWoodGrain(canvas, left, top, left + cellSize, top + cellSize, isDark)
+                canvas.drawRect(left, top, left + cellSize, top + cellSize, boardBorderPaint)
             }
         }
     }
 
-    /**
-     * Draws procedural wood grain lines and knots to give the board a realistic texture.
-     */
     private fun drawWoodGrain(canvas: Canvas, left: Float, top: Float, right: Float, bottom: Float, isDark: Boolean) {
         val random = Random((left.toLong() * 31 + top.toLong()))
         val grainPaint = if (isDark) darkGrainPaint else lightGrainPaint
         val width = right - left
         val height = bottom - top
 
-        // 1. Vertical plank streaks
         for (i in 0 until 4) {
             val stripePaint = Paint(grainPaint).apply {
                 alpha = if (isDark) 20 else 15
@@ -265,7 +231,6 @@ class CheckersBoardView(context: Context) : View(context) {
             canvas.drawLine(x, top, x + (random.nextFloat() - 0.5f) * 20f, bottom, stripePaint)
         }
 
-        // 2. Wavy organic grain lines
         for (i in 0 until 20) {
             grainPaint.strokeWidth = 0.5f + random.nextFloat() * 2.5f
             grainPath.reset()
@@ -278,7 +243,6 @@ class CheckersBoardView(context: Context) : View(context) {
             canvas.drawPath(grainPath, grainPaint)
         }
 
-        // 3. Random wood knots
         if (random.nextFloat() > 0.7f) {
             val knotX = left + random.nextFloat() * width
             val knotY = top + random.nextFloat() * height
@@ -290,9 +254,6 @@ class CheckersBoardView(context: Context) : View(context) {
         }
     }
 
-    /**
-     * Renders all pieces currently on the board.
-     */
     private fun drawPieces(canvas: Canvas) {
         for (row in 0 until boardSize) {
             for (col in 0 until boardSize) {
@@ -308,7 +269,13 @@ class CheckersBoardView(context: Context) : View(context) {
                         canvas.drawBitmap(bitmap, null, pieceRect, null)
                     } else {
                         val paint = if (piece.isRed) redPiecePaint else blackPiecePaint
-                        canvas.drawCircle(centerX, centerY, radius, paint)
+                        
+                        // Accessibility: Red side to stars if alternate_shapes is active
+                        if (themeName == "alternate_shapes" && piece.isRed) {
+                            drawStar(canvas, centerX, centerY, radius, paint)
+                        } else {
+                            canvas.drawCircle(centerX, centerY, radius, paint)
+                        }
                     }
                 }
             }
@@ -316,8 +283,33 @@ class CheckersBoardView(context: Context) : View(context) {
     }
 
     /**
-     * Draws a highlight around the currently selected square.
+     * Draws a 5-point star path.
      */
+    private fun drawStar(canvas: Canvas, cx: Float, cy: Float, radius: Float, paint: Paint) {
+        starPath.reset()
+        val outerRadius = radius
+        val innerRadius = radius / 2.5f
+        val points = 5
+        var angle = -Math.PI / 2
+        val deltaAngle = Math.PI / points
+        
+        starPath.moveTo(
+            (cx + outerRadius * cos(angle)).toFloat(),
+            (cy + outerRadius * sin(angle)).toFloat()
+        )
+        
+        for (i in 0 until points * 2) {
+            angle += deltaAngle
+            val r = if (i % 2 == 0) innerRadius else outerRadius
+            starPath.lineTo(
+                (cx + r * cos(angle)).toFloat(),
+                (cy + r * sin(angle)).toFloat()
+            )
+        }
+        starPath.close()
+        canvas.drawPath(starPath, paint)
+    }
+
     private fun drawSelectionHighlight(canvas: Canvas) {
         if (game.selectedRow != -1 && game.selectedCol != -1) {
             val left = game.selectedCol * cellSize
@@ -326,20 +318,15 @@ class CheckersBoardView(context: Context) : View(context) {
         }
     }
 
-    /**
-     * Renders the lightning GIF animation when a piece is promoted to King.
-     */
     private fun drawLightningAnimation(canvas: Canvas) {
         val movie = lightningMovie ?: return
         if (lightningStartTime == -1L) return
-        
         val now = SystemClock.uptimeMillis()
         val duration = if (movie.duration() == 0) 1000 else movie.duration()
         
         if (now - lightningStartTime < duration) {
             movie.setTime(((now - lightningStartTime) % duration).toInt())
             val centerX = lightningCol * cellSize + cellSize / 2f
-            // Vertical offset (-200f) to align the lightning bolt visually with the piece
             val centerY = lightningRow * cellSize + cellSize / 2f - 200f
             val targetSize = cellSize * 6.0f
             
@@ -350,7 +337,7 @@ class CheckersBoardView(context: Context) : View(context) {
             canvas.scale(scaleX, scaleY)
             movie.draw(canvas, -movie.width() / 2f, -movie.height() / 2f)
             canvas.restore()
-            invalidate() // Continue animation
+            invalidate()
         } else {
             lightningStartTime = -1L
             invalidate()
@@ -360,8 +347,6 @@ class CheckersBoardView(context: Context) : View(context) {
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
             performClick()
-            
-            // 1. Check if user clicked a UI button
             if (homeButtonRect.contains(event.x, event.y)) {
                 onHomeClick?.invoke()
                 return true
@@ -371,15 +356,12 @@ class CheckersBoardView(context: Context) : View(context) {
                 invalidate()
                 return true
             }
-
-            // 2. Check if user clicked on the board
             val touchX = event.x - offsetX
             val touchY = event.y - offsetY
             val col = (touchX / cellSize).toInt()
             val row = (touchY / cellSize).toInt()
 
             if (row in 0 until boardSize && col in 0 until boardSize) {
-                // Pass touch event to game engine. If state changes, redraw and check for win.
                 if (game.handleTouch(row, col) { r, c -> triggerKingEffect(r, c) }) {
                     invalidate()
                     checkGameState()
@@ -390,9 +372,6 @@ class CheckersBoardView(context: Context) : View(context) {
         return super.onTouchEvent(event)
     }
 
-    /**
-     * Triggers the visual and audio effects for a King promotion.
-     */
     private fun triggerKingEffect(row: Int, col: Int) {
         lightningRow = row
         lightningCol = col
@@ -404,9 +383,6 @@ class CheckersBoardView(context: Context) : View(context) {
         invalidate()
     }
 
-    /**
-     * Checks if the game has ended and triggers the appropriate callback.
-     */
     private fun checkGameState() {
         when (game.checkGameState()) {
             CheckersGame.GameState.RED_WIN -> onDefeat?.invoke()
