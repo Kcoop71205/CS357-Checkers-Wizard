@@ -1,5 +1,6 @@
 package com.example.checkerscanvaslab
 
+import android.util.Log
 import kotlin.math.abs
 
 /**
@@ -150,6 +151,10 @@ class CheckersGame {
         canCaptureAgain = false
         selectedRow = -1
         selectedCol = -1
+        Log.d("checkers score", board.printBoard())
+        Log.d("checkers score", board.returnScore().toString())
+        Log.d("checkers score", getMoveList(false).toString())
+
     }
 
     /**
@@ -195,6 +200,71 @@ class CheckersGame {
             }
         }
         return false
+    }
+//ArrayList<ArrayList<Int>>
+    public fun getMoveList(isRed: Boolean): ArrayList<ArrayList<Int>> {
+        var movesList = arrayListOf<ArrayList<Int>>()
+        for( row in 0 until board.boardSize) {
+            for (col in 0 until board.boardSize) {
+                var piece = board.getPiece(row, col)
+                if (piece.isRed == isRed && piece != CheckersPiece.NONE) {
+                    var secPiece = board.getPiece(row - 1, col - 1) // check up left
+                    var thirdPiece = board.getPiece(row - 2, col - 2)
+                    if (row - 1 > 0 && col - 1 > 0) {
+                        if (secPiece == CheckersPiece.NONE) {
+                            if (isValidDirection(piece, -1)) {
+                                movesList.add(arrayListOf(row, col, row - 1, col - 1))
+                            }
+                        } else if (secPiece.isRed != isRed && thirdPiece == CheckersPiece.NONE) {
+                            if (isValidDirection(piece, -2)) {
+                                movesList.add(arrayListOf(row, col, row - 2, col - 2))
+                            }
+                        }
+                    }
+                    secPiece = board.getPiece(row - 1, col + 1) // check up right
+                    thirdPiece = board.getPiece(row - 2, col + 2)
+                    if (row - 1 > 0 && col + 1 < 8) {
+                        if (secPiece == CheckersPiece.NONE) {
+                            if (isValidDirection(piece, -1)) {
+                                movesList.add(arrayListOf(row, col, row - 1, col + 1))
+                            }
+                        } else if (secPiece.isRed != isRed && thirdPiece == CheckersPiece.NONE) {
+                            if (isValidDirection(piece, -2)) {
+                                movesList.add(arrayListOf(row, col, row - 2, col + 2))
+                            }
+                        }
+                    }
+                    secPiece = board.getPiece(row + 1, col - 1) // check down left
+                    thirdPiece = board.getPiece(row + 2, col - 2)
+                    if (row + 1 < 8 && col - 1 > 0) {
+                        if (secPiece == CheckersPiece.NONE) {
+                            if (isValidDirection(piece, +1)) {
+                                movesList.add(arrayListOf(row, col, row + 1, col - 1))
+                            }
+                        } else if (secPiece.isRed != isRed && thirdPiece == CheckersPiece.NONE) {
+                            if (isValidDirection(piece, +2)) {
+                                movesList.add(arrayListOf(row, col, row + 2, col - 2))
+                            }
+                        }
+                    }
+                    secPiece = board.getPiece(row + 1, col + 1) // check down right
+                    thirdPiece = board.getPiece(row + 2, col + 2)
+                    if (row + 1 < 8 && col + 1 < 8) {
+                        if (secPiece == CheckersPiece.NONE) {
+                            if (isValidDirection(piece, +1)) {
+                                movesList.add(arrayListOf(row, col, row + 1, col + 1))
+                            }
+                        } else if (secPiece.isRed != isRed && thirdPiece == CheckersPiece.NONE) {
+                            if (isValidDirection(piece, +2)) {
+                                movesList.add(arrayListOf(row, col, row + 2, col + 2))
+                            }
+                        }
+                    }
+                }
+
+                }
+            }
+        return movesList;
     }
 
     /**
