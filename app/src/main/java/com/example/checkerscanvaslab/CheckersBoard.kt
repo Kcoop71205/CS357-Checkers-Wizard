@@ -104,10 +104,10 @@ class CheckersBoard {
     }
 
 
-    fun copyBoard(vararg secondBoard: Int) {
+    fun copyBoard(secondBoard: CheckersBoard) {
         for (row in 0 until boardSize) {
             for (col in 0 until boardSize) {
-
+                secondBoard.setPiece(row, col,this.getPiece(row, col))
             }
         }
     }

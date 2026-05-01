@@ -154,6 +154,7 @@ class CheckersGame {
         Log.d("checkers score", board.printBoard())
         Log.d("checkers score", board.returnScore().toString())
         Log.d("checkers score", getMoveList(false).toString())
+        Log.d("checkers score", pickBestMove(board,getMoveList(false), false).toString())
 
     }
 
@@ -265,6 +266,33 @@ class CheckersGame {
                 }
             }
         return movesList;
+    }
+
+    fun pickBestMove(board: CheckersBoard, movesList: ArrayList<ArrayList<Int>>, isRed: Boolean): ArrayList<Int> {
+        var cloneBoard = CheckersBoard()
+        var bestMove = arrayListOf<Int>()
+        var currMoveScore: Int
+        var bestMoveScore = 999
+        //bestMove = move
+
+        for (move in movesList) {
+            board.copyBoard(cloneBoard)
+            cloneBoard.movePiece(move[0],move[1], move[2], move[3])
+            if (abs(move[0] - move[2]) == 2) {
+                cloneBoard.setPiece(move[0]+((move[2]-move[0])/2),move[1]+((move[3]-move[1])/2), CheckersPiece.NONE)
+            }
+            Log.d("checkers board", cloneBoard.printBoard())
+            Log.d("checkers score", cloneBoard.returnScore().toString())
+            currMoveScore = cloneBoard.returnScore()
+            if (currMoveScore < bestMoveScore) {
+                bestMoveScore = currMoveScore
+                bestMove = move
+            }
+        }
+        if (bestMoveScore == 0) {
+            bestMove = movesList.random()
+        }
+        return bestMove
     }
 
     /**
