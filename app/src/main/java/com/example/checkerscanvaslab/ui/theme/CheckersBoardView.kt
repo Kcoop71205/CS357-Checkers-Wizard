@@ -152,19 +152,19 @@ class CheckersBoardView(context: Context) : View(context) {
 
         topScrollRect.set(width * 0.05f, offsetY - scrollHeight + 15f, width * 0.95f, offsetY + 15f)
         canvas.drawBitmap(scrollBitmap, null, topScrollRect, null)
-        drawTextWithRedHighlight(canvas, "Player Two Points(red): ${game.redCapturedCount}", 
+        drawTextWithRedHighlight(canvas, "Player Two Points(black): ${game.blackCapturedCount}",
             width / 2f, topScrollRect.centerY() + 15f, scorePaint, redScorePaint)
 
         bottomScrollRect.set(width * 0.05f, offsetY + boardDim - 15f, width * 0.95f, offsetY + boardDim + scrollHeight - 15f)
         canvas.drawBitmap(scrollBitmap, null, bottomScrollRect, null)
-        drawTextWithRedHighlight(canvas, "Player One Points(black): ${game.blackCapturedCount}", 
+        drawTextWithRedHighlight(canvas, "Player One Points(red): ${game.redCapturedCount}",
             width / 2f, bottomScrollRect.centerY() + 15f, scorePaint, redScorePaint)
 
         val turnText = if (game.isRedTurn) "Player One's Turn (Red)" else "Player Two's Turn (Black)"
         drawTextWithRedHighlight(canvas, turnText, width / 2f, 170f, turnPaint, redTurnPaint)
 
-        val buttonWidth = 220f
-        val buttonHeight = 100f
+        val buttonWidth = 300f
+        val buttonHeight = 200f
         val margin = 40f
         homeButtonRect.set(margin, height - margin - buttonHeight, margin + buttonWidth, height - margin)
         resetButtonRect.set(width - margin - buttonWidth, height - margin - buttonHeight, width - margin, height - margin)

@@ -139,7 +139,7 @@ fun TutorialScreen(onBackClick: () -> Unit) {
                         fontFamily = FontFamily.Cursive
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
                         text = step.description,
@@ -162,7 +162,7 @@ fun TutorialScreen(onBackClick: () -> Unit) {
                     val color = if (pagerState.currentPage == iteration) Color(0xFF23479F) else Color.Gray.copy(alpha = 0.5f)
                     Box(
                         modifier = Modifier
-                            .padding(4.dp)
+                            .padding(8.dp)
                             .clip(CircleShape)
                             .background(color)
                             .size(10.dp)
@@ -170,7 +170,7 @@ fun TutorialScreen(onBackClick: () -> Unit) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Custom Back Button using parchment scroll image
             Box(
@@ -198,7 +198,7 @@ fun TutorialScreen(onBackClick: () -> Unit) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }

@@ -86,12 +86,12 @@ fun SettingsScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         // Volume Label
         Text(
             text = "Volume",
-            fontSize = 30.sp,
+            fontSize = 36.sp,
             fontFamily = FontFamily.Cursive,
             fontWeight = FontWeight.Bold,
             color = Color.Black
@@ -110,12 +110,12 @@ fun SettingsScreen(
             )
         )
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(60.dp))
 
         // Accessibility Section Label
         Text(
             text = "Accessibility / Themes",
-            fontSize = 28.sp,
+            fontSize = 36.sp,
             fontFamily = FontFamily.Cursive,
             fontWeight = FontWeight.Bold,
             color = Color.Black
@@ -129,8 +129,8 @@ fun SettingsScreen(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .width(260.dp)
-                    .height(90.dp)
+                    .width(240.dp)
+                    .height(120.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .clickable(
                         interactionSource = interactionSource,
@@ -145,7 +145,7 @@ fun SettingsScreen(
                 )
                 Text(
                     text = "Select Theme",
-                    fontSize = 26.sp,
+                    fontSize = 30.sp,
                     fontFamily = FontFamily.Cursive,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
@@ -185,14 +185,14 @@ fun SettingsScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(190.dp))
 
         // Custom Back Button using parchment scroll image
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .width(260.dp)
-                .height(90.dp)
+                .width(240.dp)
+                .height(120.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .clickable(
                     interactionSource = interactionSource,
@@ -207,7 +207,7 @@ fun SettingsScreen(
             )
             Text(
                 text = "Back to Home",
-                fontSize = 26.sp,
+                fontSize = 30.sp,
                 fontFamily = FontFamily.Cursive,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
